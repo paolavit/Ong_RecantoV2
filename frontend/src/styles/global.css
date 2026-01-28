@@ -1,0 +1,44 @@
+/* Estilos globais para navegação clássica */
+
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+body {
+  font-family: 'Baloo 2', 'Montserrat', Arial, sans-serif;
+  color: #333;
+  line-height: 1.6;
+}
+
+html, body {
+  width: 100%;
+  min-height: 100vh;
+}
+
+/* Estilos para links */
+a {
+  color: inherit;
+  text-decoration: none;
+  transition: color 0.3s ease;
+}
+
+/* Animação para notificações */
+@keyframes slideIn {
+  from {
+    transform: translateX(400px);
+    opacity: 0;
+  }
+  to {
+    transform: translateX(0);
+    opacity: 1;
+  }
+}
+
+/* Estilos responsivos */
+@media (max-width: 768px) {
+  body {
+    font-size: 14px;
+  }
+}

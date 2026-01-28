@@ -1,0 +1,30 @@
+{
+  "name": "ong-frontend",
+  "version": "1.0.0",
+  "description": "Frontend para ONG",
+  "main": "index.js",
+  "scripts": {
+    "dev": "cross-env NODE_ENV=development webpack serve --mode development",
+    "dev:staging": "cross-env NODE_ENV=staging webpack serve --mode development",
+    "build": "cross-env NODE_ENV=production webpack --mode production",
+    "build:dev": "cross-env NODE_ENV=development webpack --mode development",
+    "build:staging": "cross-env NODE_ENV=staging webpack --mode production",
+    "build:prod": "cross-env NODE_ENV=production webpack --mode production"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "devDependencies": {
+    "@types/node": "^20.0.0",
+    "cross-env": "^10.1.0",
+    "css-loader": "^6.8.0",
+    "dotenv": "^16.3.1",
+    "html-webpack-plugin": "^5.5.0",
+    "style-loader": "^3.3.0",
+    "ts-loader": "^9.5.0",
+    "typescript": "^5.3.0",
+    "webpack": "^5.89.0",
+    "webpack-cli": "^5.1.0",
+    "webpack-dev-server": "^4.15.0"
+  }
+}
