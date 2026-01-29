@@ -3,7 +3,7 @@ import database from "../database/databaseClient";
 import { UsuarioVoluntario } from "../models/usuarioVoluntarioModel";
 
 export class UsuarioVoluntarioDAO{
-    
+
     async insertUsuarioVoluntario(usuario: UsuarioVoluntario): Promise<UsuarioVoluntario> {
 
     try {
@@ -39,7 +39,6 @@ export class UsuarioVoluntarioDAO{
                     cpf,
                     telefone,
                     tipo_usuario,
-                    id_rede_social,
                     escolaridade,
                     possui_pet,
                     logradouro,
@@ -60,7 +59,6 @@ export class UsuarioVoluntarioDAO{
                     ${dadosUsuario.cpf},
                     ${dadosUsuario.telefone},
                     'VOLUNTARIO',
-                    ${dadosUsuario.id_rede_social},
                     ${dadosUsuario.escolaridade},
                     ${dadosUsuario.possuiPet},
                     ${dadosUsuario.logradouro},
