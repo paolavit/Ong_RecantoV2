@@ -18,7 +18,7 @@
         bairro?: string | null;
         cidade?:  string | null;
         estado?: string | null;
-        contribuir_ong: boolean;
-        deseja_adotar: ConstrainBooleanParameters; 
+        contribuir_ong: boolean; //TROCAR NO FRONT PARA BOOL
+        deseja_adotar: boolean; 
         criado_em: string;
     }

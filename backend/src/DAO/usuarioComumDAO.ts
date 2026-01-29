@@ -1,79 +1,84 @@
-import database from "../database/databaseClient";
-import { UsuarioComum } from "../models/usuarioComumModel";
 
-   export class UsuarioComumDAO {
-       
-        async insertUsuario(usuario: UsuarioComum): Promise<UsuarioComum> {
-            console.log("=== DAO - INSERINDO USUÁRIO NO BANCO ===");
-            console.log("Dados a serem inseridos:", usuario);
+import sql from "../database/databaseClient";
+import { Usuario } from "../models/usuarioModel";
 
-            try {
+export class UsuarioComumDAO {
 
-                // 1. Separa os dados da tabela USUARIO e da tabela USUARIO_COMUM
-                const {
-                    contribuirOng, desejaAdotar, 
-                    ...dadosUsuario 
-                } = usuario;
+    async insertUsuario(usuario: Usuario): Promise<Usuario> {
+    console.log("=== DAO - INSERINDO USUÁRIO NO BANCO ===");
+    console.log("Dados a serem inseridos:", usuario);
 
-                console.log("Email sendo inserido no banco:", dadosUsuario.email);
-               
-          
-                // Verificação direta de existência de email ou cpf
-                const { data: existente, error: erroVerificacao } = await database
-                  .from("USUARIO")
-                  .select("id_usuario")
-                  .or(`email.eq.${dadosUsuario.email},cpf.eq.${dadosUsuario.cpf}`)
-          
-                if (erroVerificacao) {
-                  console.log("EXISTE ESSE USUARIO JA CADASTRADO NO BANCO")
-                  throw new Error("Erro ao verificar existência de usuário.");
-                }
-          
-                console.log(existente)
-              
-                if (existente && existente.length > 0) {
-                   throw new Error("Já existe um usuário com este email ou CPF.");
-                }
+    try {
+      /* ===============================
+         1. Verifica se email ou CPF já existem
+      =============================== */
+      const usuarioExistente = await sql<{ id_usuario: number }[]>`
+        SELECT id_usuario
+        FROM usuario
+        WHERE email = ${usuario.email}
+           OR cpf   = ${usuario.cpf}
+      `;
 
-                // 2. Insere na tabela USUARIO e retorna o id gerado
-                const { data: usuarioInserido, error: erroUsuario } = await database
-                    .from('USUARIO')
-                    .insert(dadosUsuario)
-                    .select()
-                    .single();
+      if (usuarioExistente.length > 0) {
+        throw new Error("Já existe um usuário com este email ou CPF.");
+      }
 
-                if (erroUsuario) {
-                    console.error("Erro ao inserir na tabela USUARIO:", erroUsuario);
-                    throw new Error(erroUsuario.message);
-                }
+      /* ===============================
+         2. Insere usuário
+      =============================== */
+      const [usuarioInserido] = await sql<Usuario[]>`
+        INSERT INTO usuario (
+          nome,
+          sobrenome,
+          email,
+          senha,
+          data_nascimento,
+          cpf,
+          telefone,
+          tipo_usuario,
+          id_rede_social,
+          escolaridade,
+          possui_pet,
+          logradouro,
+          numero,
+          complemento,
+          bairro,
+          cidade,
+          estado,
+          contribuir_ong,
+          deseja_adotar
+        ) VALUES (
+          ${usuario.nome},
+          ${usuario.sobrenome},
+          ${usuario.email},
+          ${usuario.senha},
+          ${usuario.dataNascimento},
+          ${usuario.cpf},
+          ${usuario.telefone ?? null},
+          'COMUM',
+          ${usuario.id_rede_social ?? null},
+          ${usuario.escolaridade ?? null},
+          ${usuario.possuiPet},
+          ${usuario.logradouro ?? null},
+          ${usuario.numero ?? null},
+          ${usuario.complemento ?? null},
+          ${usuario.bairro ?? null},
+          ${usuario.cidade ?? null},
+          ${usuario.estado ?? null},
+          ${usuario.contribuir_ong},
+          ${usuario.deseja_adotar}
+        )
+        RETURNING *
+      `;
 
-                const idUsuario = usuarioInserido.id_usuario;
+      console.log("=== DAO - USUÁRIO INSERIDO COM SUCESSO ===");
+      console.log(usuarioInserido);
 
-                // 3. Insere na tabela USUARIO_COMUM com o id_usuario referenciando a tabela pai
-                const { data: usuarioComumInserido, error: erroComum } = await database
-                    .from('USUARIO_COMUM')
-                    .insert({
-                        id: idUsuario,
-                        contribuirOng,
-                        desejaAdotar
-                    })
-                    .select()
-                    .single();
+      return usuarioInserido;
 
-                if (erroComum) {
-                    console.error("Erro ao inserir na tabela USUARIO_COMUM:", erroComum);
-                    throw new Error(erroComum.message);
-                }
-
-                // 4. Retorna o objeto
-                return {
-                    ...usuarioInserido,
-                    ...usuarioComumInserido
-                } as UsuarioComum;
-
-            } catch (e: any) {
-                console.error("=== DAO - ERRO GERAL ===");
-                throw new Error(e.message);
-            }
-        }
+    } catch (error: any) {
+      console.error("=== DAO - ERRO AO INSERIR USUÁRIO ===");
+      throw new Error(error.message);
     }
+  }
+}

@@ -3,7 +3,6 @@ import { Router } from 'express';
 import petRoutes from './petRoutes';
 import loginRoutes from './loginRoutes';
 import usuarioRoutes from './usuarioRoutes';
-import pedidosAdocaoRoutes from './pedidosAdocaoRoutes';
 import animaisAdotadosRoutes from './animaisAdotadosRoutes';
 import solicitacaoAdocaoRoutes from './solicitacaoAdocaoRoutes';
 
@@ -14,7 +13,6 @@ const router = Router();
 router.use('/pets', petRoutes);
 router.use('/login', loginRoutes);
 router.use('/usuarios', usuarioRoutes);
-router.use('/pedidos-adocao', pedidosAdocaoRoutes);
 router.use('/animais-adotados', animaisAdotadosRoutes);
 router.use('/solicitar-adocao', solicitacaoAdocaoRoutes);
 

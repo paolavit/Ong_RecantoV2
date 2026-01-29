@@ -63,8 +63,8 @@ class PetDAO {
 
 
 
-    async selectPetById(id_pet: string) {
-        const pet = await sql`SELECT * FROM pet WHERE id_pet = ${id_pet}`
+    async selectPetById(id_pet: number) {
+        const pet = await sql<Pet[]>`SELECT * FROM pet WHERE id_pet = ${id_pet}`
            
         if (pet.length === 0) {
             throw new Error('Pet não encontrado');

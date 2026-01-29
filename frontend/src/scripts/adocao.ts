@@ -165,6 +165,13 @@ nextBtn.addEventListener("click", () => {
 async function solicitarAdocao(petId: string) {
   const token = localStorage.getItem("token");
 
+  //PEGAR O ID DO USUARIO QUE CLICOU PELO TOKEN NO BACKEND
+  if (!token) {
+    alert("Usuário não autenticado. Por favor, faça login para solicitar a adoção.");
+    return;
+  }
+
+  
   // const user = getUserFromToken();
   // if (!user) {
   //   alert("Usuário não autenticado");

@@ -1,18 +1,16 @@
-import database from "../database/databaseClient";
+import sql from "../database/databaseClient";
+import { Usuario } from "../models/usuarioModel";
 
 export class UsuarioDAO {
     async selectUsuarioById(id_usuario: string) {
-        const { data, error } = await database
-            .from("USUARIO")
-            .select("*")
-            .eq("id_usuario", id_usuario)
-            .single();
+        const usuario = await sql<Usuario[]>`
+            SELECT * FROM usuario WHERE id_usuario = ${id_usuario}
+        `;
 
-        if (error) {
-            console.log(error.message);
+        if (usuario.length === 0) {
             throw new Error("Usuário não encontrado");
         }
 
-        return data;
+        return usuario[0] as Usuario;
     }
 }

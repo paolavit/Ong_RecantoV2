@@ -1,68 +1,104 @@
-import database from "../database/databaseClient";
+import sql from "../database/databaseClient";
 import { UsuarioAdministrador } from "../models/usuarioAdministradorModel";
 
 export class UsuarioAdministradorDAO {
-  async insertUsuario(usuario: UsuarioAdministrador): Promise<UsuarioAdministrador> {
+  async insertUsuario(
+    usuario: UsuarioAdministrador
+  ): Promise<UsuarioAdministrador> {
+
     try {
-      const { funcao, especiePet, ...dadosUsuario } = usuario;
-      console.log("Email sendo inserido no banco:", dadosUsuario.email);
-     
+      /* ===============================
+         1. Verifica se email ou CPF já existem
+      =============================== */
+      const existente = await sql<{ id_usuario: number }[]>`
+        SELECT id_usuario
+        FROM usuario
+        WHERE email = ${usuario.email}
+           OR cpf   = ${usuario.cpf}
+      `;
 
-      // Verificação direta de existência de email ou cpf
-      const { data: existente, error: erroVerificacao } = await database
-        .from("USUARIO")
-        .select("id_usuario")
-        .or(`email.eq.${dadosUsuario.email},cpf.eq.${dadosUsuario.cpf}`)
-
-      if (erroVerificacao) {
-        console.log("EXISTE ESSE USUARIO JA CADASTRADO NO BANCO")
-        throw new Error("Erro ao verificar existência de usuário.");
+      if (existente.length > 0) {
+        throw new Error("Já existe um usuário com este email ou CPF.");
       }
 
-      console.log(existente)
-    
-      if (existente && existente.length > 0) {
-         throw new Error("Já existe um usuário com este email ou CPF.");
-      }
+      /* ===============================
+         2. Transaction
+      =============================== */
+      const [usuarioAdministrador] = await sql.begin(
+        async (tx: any) => {
 
-      console.log("NAO EXISTE ESSE EMAIL NO BANCO!!!")
+          /* ---------- INSERE USUARIO ---------- */
+          const [usuarioInserido] = await tx<{
+            id_usuario: number
+          }[]>`
+            INSERT INTO usuario (
+              nome,
+              sobrenome,
+              email,
+              senha,
+              data_nascimento,
+              cpf,
+              telefone,
+              tipo_usuario,
+              id_rede_social,
+              escolaridade,
+              possui_pet,
+              logradouro,
+              numero,
+              complemento,
+              bairro,
+              cidade,
+              estado,
+              contribuir_ong,
+              deseja_adotar
+            ) VALUES (
+              ${usuario.nome},
+              ${usuario.sobrenome},
+              ${usuario.email},
+              ${usuario.senha},
+              ${usuario.dataNascimento},
+              ${usuario.cpf},
+              ${usuario.telefone ?? null},
+              ${usuario.tipo_usuario},
+              ${usuario.id_rede_social ?? null},
+              ${usuario.escolaridade ?? null},
+              ${usuario.possuiPet},
+              ${usuario.logradouro ?? null},
+              ${usuario.numero ?? null},
+              ${usuario.complemento ?? null},
+              ${usuario.bairro ?? null},
+              ${usuario.cidade ?? null},
+              ${usuario.estado ?? null},
+              ${usuario.contribuir_ong},
+              ${usuario.deseja_adotar}
+            )
+            RETURNING id_usuario
+          `;
 
-      // Inserir USUARIO
-      const { data: usuarioInserido, error: erroUsuario } = await database
-        .from("USUARIO")
-        .insert(dadosUsuario)
-        .select()
-        .single();
+          /* ---------- INSERE USUARIO_ADMINISTRADOR ---------- */
+          const [adminInserido] = await tx<UsuarioAdministrador[]>`
+            INSERT INTO usuario_administrador (
+              id_usuario,
+              funcao,
+              id_colab_especies_pets
+            ) VALUES (
+              ${usuarioInserido.id_usuario},
+              ${usuario.funcao},
+              ${usuario.id_colab_especies_pets}
+            )
+            RETURNING *
+          `;
 
-      if (erroUsuario || !usuarioInserido) {
-        console.error("Erro ao inserir na tabela USUARIO:", erroUsuario);
-        throw new Error(erroUsuario?.message || "Erro desconhecido ao inserir usuário.");
-      }
+          return adminInserido;
+        }
+      );
 
-      // Inserir USUARIO_ADMINISTRADOR
-      const { data: usuarioAdministradorInserido, error: erroAdministrador } = await database
-        .from("USUARIO_ADMINISTRADOR")
-        .insert({
-          id: usuarioInserido.id_usuario,
-          funcao,
-          especiePet
-        })
-        .select()
-        .single();
+      console.log("DAO -> USUÁRIO ADMINISTRADOR INSERIDO COM SUCESSO");
+      return usuarioAdministrador;
 
-      if (erroAdministrador || !usuarioAdministradorInserido) {
-        console.error("Erro ao inserir na tabela USUARIO_ADMINISTRADOR:", erroAdministrador);
-        throw new Error(erroAdministrador?.message || "Erro ao salvar administrador.");
-      }
-
-      console.log("DAO -> USUARIO ADMINISTRADOR INSERIDO");
-      console.log(usuarioAdministradorInserido);
-
-      return usuarioAdministradorInserido as UsuarioAdministrador;
-
-    } catch (e: any) {
-      console.error("ERRO NO DAO:", e.message);
-      throw new Error(e.message);
+    } catch (error: any) {
+      console.error("ERRO NO DAO - ADMINISTRADOR:", error.message);
+      throw new Error(error.message);
     }
   }
 }

@@ -7,9 +7,10 @@ export class SolicitacaoAdocaoController {
     async postSolicitacaoAdocao(req: Request, res: Response) {
         try {
     
-            const { id_usuario, id_pet } = req.body;
+            const { id_pet } = req.body;
+            const { id_usuario } = req.user!;
 
-            const resultado = await solicitacaoAdocaoRN.insertSolicitacaoAdocao(id_pet, id_usuario);
+            const resultado = await solicitacaoAdocaoRN.insertSolicitacaoAdocao(Number(id_pet), id_usuario);
             res.status(201).json({ mensagem: "Solicitação enviada com sucesso", dados: resultado });
             
         } catch (error: any) {

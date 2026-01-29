@@ -1,26 +1,145 @@
-import database from "../database/databaseClient";
+import sql from "../database/databaseClient";
+import { SolicitacaoAdocao } from "../models/solicitacaoAdocaoModel";
 
 export class SolicitacaoAdocaoDAO {
-    async insertSolicitarAdocao(id_usuario: string, id_pet: string) {
-        const solicitacaoObj = {
-            id_usuario: id_usuario,
-            id_pet: id_pet,
-            status: "Pendente",
-            data_solicitacao: new Date() // Corrigido
-        };
 
-        const { data, error } = await database
-            .from("SOLICITACAO_ADOCAO")
-            .insert(solicitacaoObj)
-            .select()
-            .single();
+    async getAllSolicitacoesPendentes(): Promise<SolicitacaoAdocao[]> {
+        try {
+            const solicitacoes = await sql<SolicitacaoAdocao[]>`
+                SELECT * FROM solicitacao_adocao
+                WHERE status = 'PENDENTE' 
+            `;
+            return solicitacoes;
+        } catch (error) {
+            console.error("Erro ao buscar solicitações de adoção:", error);
+            throw error;
+        }
+    }
 
-        if (error) {
-            console.error("=== DAO - ERRO NO BANCO ===");
-            console.error("Erro do banco:", error);
+    async getSolicitacaoPorIdUsuario(id_usuario: number): Promise<SolicitacaoAdocao[]> {
+        try {
+            const solicitacoes = await sql<SolicitacaoAdocao[]>`
+                SELECT * FROM solicitacao_adocao
+                WHERE id_usuario = ${id_usuario}
+            `;
+            return solicitacoes;
+        } catch (error) {
+            console.error("Erro ao buscar solicitações de adoção:", error);
+            throw error;
+        }
+    }
+
+    async aprovarSolicitacaoAdocao(id_solicitacao: number, id_administrador: number): Promise<void> {
+
+        try {
+            await sql.begin(async (tx: any) => {
+
+                /* 1️⃣ Buscar dados da solicitação */
+                const [solicitacao] = await tx<{
+                    id_usuario: number;
+                    id_pet: number;
+                }[]>`
+                SELECT id_usuario, id_pet
+                FROM solicitacao_adocao
+                WHERE id = ${id_solicitacao}
+                AND status = 'PENDENTE'
+                `;
+
+                if (!solicitacao) {
+                    throw new Error("Solicitação não encontrada ou já finalizada.");
+                }
+
+                /* 2️⃣ Atualiza solicitação */
+                await tx`
+                UPDATE solicitacao_adocao
+                SET
+                status = 'APROVADA',
+                id_administrador = ${id_administrador}
+                WHERE id = ${id_solicitacao}
+                `;
+
+                /* 3️⃣ Atualiza PET (atribui usuário) */
+                await tx`
+                UPDATE pet
+                SET
+                id_usuario = ${solicitacao.id_usuario},
+                data_adocao = NOW()
+                WHERE id = ${solicitacao.id_pet}
+                `;
+            });
+
+        } catch (error) {
+            console.error("Erro ao aprovar solicitação de adoção:", error);
+            throw error;
+        }
+    }
+
+    async reprovarSolicitacaoAdocao(id_solicitacao: number, id_administrador: number): Promise<void> {
+        try {
+            await sql`
+                UPDATE solicitacao_adocao
+                id_administrador = ${id_administrador}, status = 'REPROVADA'
+                WHERE id_solicitacao = ${id_solicitacao}
+            `;
+        } catch (error) {
+            console.error("Erro ao rejeitar solicitação de adoção:", error);
+            throw error;
+        }
+    }
+
+    async insertSolicitarAdocao(id_usuario: number, id_pet: number): Promise<SolicitacaoAdocao> {
+
+        try {
+            const [solicitacao] = await sql<SolicitacaoAdocao[]>`
+        INSERT INTO solicitacao_adocao (
+          id_usuario,
+          id_pet,
+          status,
+          data_solicitacao
+        ) VALUES (
+          ${id_usuario},
+          ${id_pet},
+          'PENDENTE',
+          NOW()
+        )
+        RETURNING *
+      `;
+
+            return solicitacao;
+
+        } catch (error: any) {
+            console.error("=== DAO - ERRO AO INSERIR SOLICITAÇÃO DE ADOÇÃO ===");
             throw new Error(error.message);
         }
-
-        return data;
     }
+
+    // const pedidoCompleto: PedidoAdocaoCompleto = {
+    //                 idPedido: String(pedido.id || pedido.id_solicitacao),
+    //                 dataSolicitacao: pedido.data_solicitacao || pedido.created_at || new Date().toISOString(),
+    //                 status: pedido.status as "Pendente" | "Concluido",
+    //                 resultado: pedido.resultado as "Aprovado" | "Reprovado" | null || null,
+                    
+    //                 adotante: {
+    //                     idUsuario: String(usuarioData.id_usuario || usuarioData.id),
+    //                     nomeCompleto: `${usuarioData.nome || ''} ${usuarioData.sobrenome || ''}`.trim(),
+    //                     email: usuarioData.email || '',
+    //                     telefone: usuarioData.telefone || '',
+    //                     cpf: usuarioData.cpf || '',
+    //                     enderecoCompleto: this.montarEnderecoCompleto(usuarioData) || null,
+    //                     redeSocial: usuarioData.rede_social || usuarioData.redeSocial || null,
+    //                     escolaridade: usuarioData.escolaridade || '',
+    //                     possuiPet: usuarioData.possui_pet ?? usuarioData.possuiPet ?? null,
+    //                 },
+                    
+    //                 animal: {
+    //                     id_pet: String(petData.id_pet || petData.id),
+    //                     nome: petData.nome || '',
+    //                     raca: petData.raca || null,
+    //                     especie: petData.especie || null,
+    //                     sexo: petData.sexo || '',
+    //                     idade: petData.idade ? Number(petData.idade) : null,
+    //                     foto_url: petData.foto_url || petData.imagem || null,
+    //                     localizacaoCompleta: this.montarLocalizacaoCompleta(petData),
+    //                 },
+    //             };
 }

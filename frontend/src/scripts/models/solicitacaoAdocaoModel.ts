@@ -1,10 +1,9 @@
-import { UUID } from "crypto";
 
 export interface SolicitacaoAdocao{
-    id: UUID;
-    id_pet: UUID;
-    id_usuario: UUID;
-    id_administrador?: UUID | null;
-    status: "Pendente" | "Concluido";
-    resultado: "Aprovado" | "Reprovado" | null;
+    id: number;
+    id_usuario: number;
+    id_pet: number;
+    id_administrador?: number | null; // Pode ser undefined ou null se não for preenchido
+    status: "PENDENTE" | "APROVADA" | "REPROVADA";
+    data_solicitacao: string;
 }

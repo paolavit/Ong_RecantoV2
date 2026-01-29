@@ -1,4 +1,4 @@
-import { UsuarioComum } from '../models/usuarioComumModel';
+import { Usuario } from '../models/usuarioModel';
 import { UsuarioComumDAO } from '../DAO/usuarioComumDAO';
 
 export class UsuarioComumRN {
@@ -8,7 +8,7 @@ export class UsuarioComumRN {
     this.usuarioComumDao = new UsuarioComumDAO();
   }
 
-  async insertUsuario(usuarioData: UsuarioComum): Promise<UsuarioComum> {
+  async insertUsuario(usuarioData: Usuario): Promise<Usuario> {
     this.validarCampos(usuarioData);
 
     try {
@@ -22,7 +22,7 @@ export class UsuarioComumRN {
     }
   }
 
-  validarCampos(usuarioData: UsuarioComum) {
+  validarCampos(usuarioData: Usuario) {
     if (!usuarioData.nome) {
       throw new Error('Primeiro nome é obrigatório.');
     }
@@ -59,12 +59,13 @@ export class UsuarioComumRN {
       throw new Error('Campo "possuiPet" é obrigatório e deve ser verdadeiro ou falso.');
     }
 
-    if (!usuarioData.contribuirOng || !['sim', 'nao', 'nao sei'].includes(usuarioData.contribuirOng)) {
-      throw new Error('Campo "Deseja contribuir com a ONG?" deve ser "sim", "nao" ou "nao sei".');
+    if (typeof usuarioData.contribuir_ong !== 'boolean') {
+      throw new Error('Campo "Deseja contribuir com a ONG?" é obrigatório e deve ser verdadeiro ou falso.');
     }
+    //apenas checar se veio a variavel preenchida
 
-    if (!usuarioData.desejaAdotar || !['sim', 'nao', 'nao sei'].includes(usuarioData.desejaAdotar)) {
-      throw new Error('Campo "Deseja adotar um pet?" deve ser "sim", "nao" ou "nao sei".');
+    if (typeof usuarioData.deseja_adotar !== 'boolean') {
+      throw new Error('Campo "Deseja adotar um pet?" é obrigatório e deve ser verdadeiro ou falso.');
     }
 
     if (!usuarioData.logradouro) {
@@ -83,7 +84,7 @@ export class UsuarioComumRN {
       throw new Error('Estado é obrigatório.');
     }
 
-    if (usuarioData.tipo_usuario !== 'comum') {
+    if (usuarioData.tipo_usuario !== 'COMUM') {
       throw new Error('Tipo de usuário inválido para cadastro de usuário comum.');
     }
   }

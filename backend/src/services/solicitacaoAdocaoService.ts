@@ -7,7 +7,18 @@ export class SolicitacaoAdocaoRN {
         this.solicitacaoAdocaoDAO = new SolicitacaoAdocaoDAO();
     }
 
-    async insertSolicitacaoAdocao(id_pet: string, id_usuario: string) {
+    async getAllSolicitacoesPendentes() {
+        try {
+            const resultado = await this.solicitacaoAdocaoDAO.getAllSolicitacoesPendentes();
+            return resultado;
+        } catch (error) {
+            console.error("=== ADOCAO RN - ERRO NO DAO ===");
+            console.error("Erro capturado na SolicitacaoAdocaoRN:", error);
+            throw error;
+        }
+    }
+
+    async insertSolicitacaoAdocao(id_pet: number, id_usuario: number) {
         if (!id_pet) {
             throw new Error("Erro no ID do Pet");
         }
