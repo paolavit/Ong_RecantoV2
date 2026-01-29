@@ -1,4 +1,4 @@
-import { Pet } from '../models/petModel';
+import { CreatePetDTO, Pet } from '../models/petModel';
 import PetDAO from '../DAO/petDAO';
 
 export class PetRN {
@@ -8,7 +8,7 @@ export class PetRN {
     this.petDao = new PetDAO();
   }
 
-  async insertPet(petData: Pet): Promise<Pet> {
+  async insertPet(petData: CreatePetDTO, fotoUrl: string | null): Promise<Pet> {
     console.log("=== PETRN - VALIDANDO DADOS ===");
     console.log("Dados recebidos:", petData);
 
@@ -42,11 +42,12 @@ export class PetRN {
       console.error("Erro: Idade não pode ser negativa");
       throw new Error('Idade não pode ser negativa.');
     }
-
+   
     console.log("=== PETRN - DADOS VALIDADOS, CHAMANDO DAO ===");
 
+
     try {
-      const resultado = await this.petDao.insertPet(petData);
+      const resultado = await this.petDao.insertPet(petData, fotoUrl);
       console.log("=== PETRN - PET INSERIDO COM SUCESSO ===");
       return resultado;
     } catch (error) {

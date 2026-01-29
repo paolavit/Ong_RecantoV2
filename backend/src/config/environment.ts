@@ -29,7 +29,7 @@ function getConfig(): EnvironmentConfig {
       port: parseInt(process.env.PORT || '3000', 10),
       apiBaseUrl: process.env.API_BASE_URL || 'http://localhost:3000',
       databaseUrl: process.env.DATABASE_URL || 'https://etvxlinxjweeyhgpamuj.supabase.co',
-      databaseApiKey: process.env.DATABASE_API_KEY || '',
+        databaseApiKey: process.env.DATABASE_API_KEY || '',
       jwtSecret: process.env.JWT_SECRET || 'dev-secret-key-change-in-production',
       jwtExpiration: process.env.JWT_EXPIRATION ? parseInt(process.env.JWT_EXPIRATION, 10) : 24 * 60 * 60, // Default: 24h in seconds
       corsOrigins: (process.env.CORS_ORIGINS || 'http://localhost:3001,http://127.0.0.1:3001').split(','),

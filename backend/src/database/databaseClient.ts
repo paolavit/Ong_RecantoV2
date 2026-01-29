@@ -1,12 +1,9 @@
-import { createClient } from '@supabase/supabase-js'
+import postgres from 'postgres'
 import { config } from '../config/environment'
 
 /**
- * Cliente Supabase para upload de arquivos e operações de banco de dados
+ * Conexão PostgreSQL para operações de banco de dados
  */
-export const supabaseClient = createClient(
-  config.databaseUrl, 
-  config.databaseApiKey
-)
+const sql = postgres(config.databaseUrl)
 
-export default supabaseClient
+export default sql

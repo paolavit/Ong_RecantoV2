@@ -9,7 +9,6 @@ export interface Pet {
   sexo: "M" | "F" 
   idade?: number | null
   complemento?: string | null
-  fotoUrl?: FotoPet[] | null
   cep?: string | null
   logradouro?: string | null
   numero?: string | null
@@ -19,4 +18,23 @@ export interface Pet {
   criado_em: string
   id_usuario?: number | null
   data_adocao?: string | null
+
+  fotos?: FotoPet[]
+}
+
+export interface CreatePetDTO {
+  nome: string
+  raca?: string | null
+  especie: string 
+  sexo: "M" | "F" 
+  idade?: number | null
+  complemento?: string | null
+  cep?: string | null
+  logradouro?: string | null
+  numero?: string | null
+  bairro: string
+  cidade: string
+  estado: string
+  id_usuario?: number | null
+  criado_em: string
 }

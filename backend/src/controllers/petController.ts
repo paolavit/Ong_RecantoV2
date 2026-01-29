@@ -1,6 +1,6 @@
 import { Request, Response } from 'express'
 import { MulterRequest } from '../interfaceConfig/MulterRequest';
-import { Pet } from '../models/petModel'
+import { CreatePetDTO, Pet } from '../models/petModel'
 import { PetRN } from '../services/petService';
 import mustache from 'mustache';
 import fs from 'fs';
@@ -12,14 +12,14 @@ const petRN = new PetRN();
 export class PetCTR {
   async getAllPets(req: Request, res: Response) {
     try {
-     
+
       const pets = await petRN.selectAllPets();
-     
+
       console.log("Pets encontrados:", pets);
-      res.json({pets});
+      res.json({ pets });
 
     } catch (error: any) {
-      
+
       console.error("Erro ao buscar animais:", error);
       res.status(500).json({ error: error.message });
     }
@@ -30,21 +30,21 @@ export class PetCTR {
       console.log("=== INÍCIO DO POST PET ===");
       console.log("Body recebido:", req.body);
       console.log("File recebido:", req.file);
-      
+
       const {
-      nome,
-      raca,
-      especie,
-      sexo,
-      idade,
-      cep,
-      logradouro,
-      numero,
-      complemento,
-      bairro,
-      cidade,
-      estado
-    } = req.body;
+        nome,
+        raca,
+        especie,
+        sexo,
+        idade,
+        cep,
+        logradouro,
+        numero,
+        complemento,
+        bairro,
+        cidade,
+        estado
+      } = req.body;
 
       console.log("Dados extraídos:", {
         nome,
@@ -61,21 +61,19 @@ export class PetCTR {
         estado
       });
 
-      const fotoUrl = req.file ? `/uploads/${req.file.filename}` : null;
+      const fotoUrl = req.file ? `/uploads/${req.file.filename + Date.now().toString()}` : null;
       console.log("Foto URL:", fotoUrl);
 
-     
-      const novoPet: Pet = {
-        id: 0, // o ID será gerado pelo banco de dados
+
+      const novoPet: CreatePetDTO = {
         nome,
         raca: raca || null,
         especie: especie || null,
         sexo,
         idade: idade ? parseInt(idade, 10) : null,
-        fotoUrl,
         cep: cep || null,
         logradouro,
-        numero: numero ? parseInt(numero, 10) : null,
+        numero: numero || null,
         complemento: complemento || null,
         bairro,
         cidade,
@@ -87,15 +85,15 @@ export class PetCTR {
 
       // Chama a regra de negócio
       console.log("Chamando PetRN.insertPet...");
-      const resultado = await petRN.insertPet(novoPet);
+      const resultado = await petRN.insertPet(novoPet,fotoUrl);
       console.log("Pet inserido com sucesso:", resultado);
 
       res.status(201).send('<p>Animal cadastrado com sucesso!</p>');
-      
+
     } catch (error: any) {
       console.error("=== ERRO CAPTURADO NO CONTROLLER ===");
       console.error("Erro completo:", error);
-      
+
       // Se for erro de validação da PetRN, retorna 400 Bad Request
       if (error.message.includes('obrigatório') || error.message.includes('não pode ser')) {
         res.status(400).send('<p>Erro de validação: ' + error.message + '</p>');

@@ -1,62 +1,76 @@
-import { promises } from "dns";
-import database from "../database/databaseClient";
-import { Pet } from "../models/petModel";
+import { TransactionSql }  from "postgres";
+import sql from "../database/databaseClient";
+import { CreatePetDTO, Pet } from "../models/petModel";
+
 
 class PetDAO {
     // retorna todos os pets cadastrados no sistema
     async selectPets(): Promise<Pet[]> {
-        const { data, error } = await database.from("pet").select("*")
-
-        if(error) {
-            console.log(error.message)
-            // sobe o erro para o controller
-            throw new Error(error.message)
+        try {
+            const pets = await sql<Pet[]>`
+            SELECT * FROM pet
+        `;
+            return pets;
+        } catch (error) {
+            console.error('Erro ao buscar pets:', error);
+            throw error; // sobe pro controller
         }
-        if (data === null || data === undefined) {
-            return []
-        }
-        return data as Pet[]
     }
 
     //DAO - ENVIA PARA O BANCO
-    async insertPet(pet: Pet): Promise<Pet>{
-        console.log("=== DAO - INSERINDO PET NO BANCO ===");
-        console.log("Dados a serem inseridos:", pet);
-        
+    async insertPet( pet: CreatePetDTO,fotoUrl: string | null): Promise<Pet> {
+
         try {
-            const {data,error} = await database.from('PET').insert(pet).select().single()
-            
-            if(error) {
-                console.error("=== DAO - ERRO NO BANCO ===");
-                console.error("Erro do banco:", error);
-                // sobe o erro para o controller
-                throw new Error(error.message)
-            }
-            
-            console.log("=== DAO - PET INSERIDO COM SUCESSO ===");
-            console.log("Dados retornados:", data);
-            return data as Pet
+            const [petInserido] = await sql.begin(
+                async (tx: any) => {
+
+                    const pets = await tx<Pet[]>`
+                    INSERT INTO pet (
+                        nome,
+                        especie,
+                        idade,
+                        porte,
+                        descricao
+                    ) VALUES (
+                        ${pet.nome},
+                        ${pet.especie},
+                        ${pet.idade},
+                       
+                    )
+                    RETURNING *
+                `;
+
+                    const petCriado = pets[0];
+
+                    if (fotoUrl) {
+                        await tx`
+                        INSERT INTO foto_pet (id_pet, url)
+                        VALUES (${petCriado.id}, ${fotoUrl})
+                    `;
+                    }
+
+                    return pets;
+                }
+            );
+
+            return petInserido;
+
         } catch (error) {
-            console.error("=== DAO - ERRO CAPTURADO ===");
-            console.error("Erro no DAO:", error);
-            // sobe o erro para o controller
-            throw error; 
+            console.error('Erro ao inserir pet:', error);
+            throw error;
         }
     }
 
-    async selectPetById(id_pet: string) {
-        const { data, error } = await database
-            .from("PET")
-            .select("*")
-            .eq("id_pet", id_pet)
-            .single();
 
-        if (error) {
-            console.log(error.message);
-            throw new Error("PET não encontrado");
+
+    async selectPetById(id_pet: string) {
+        const pet = await sql`SELECT * FROM pet WHERE id_pet = ${id_pet}`
+           
+        if (pet.length === 0) {
+            throw new Error('Pet não encontrado');
         }
 
-        return data;
+        return pet[0];
     }
 }
 
